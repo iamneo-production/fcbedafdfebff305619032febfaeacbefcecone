@@ -5,32 +5,37 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/medicines")
 public class MedicineController {
-    private List<Medicine> medicineList = new ArrayList<>();
+    private Map<Integer, Medicine> medicineMap = new ConcurrentHashMap<>();
     private int nextMedicineId = 1;
 
+    // Create a new medicine
     @PostMapping
     public boolean addMedicine(@RequestBody Medicine medicine) {
         medicine.setMedicineId(nextMedicineId);
-        medicineList.add(medicine);
+        medicineMap.put(nextMedicineId, medicine);
         nextMedicineId++;
-        return true;
+        return true; // You can add error handling and return false if necessary
     }
 
+    // Update an existing medicine
     @PutMapping("/{medicineId}")
     public Medicine updateMedicine(@PathVariable int medicineId, @RequestBody Medicine updatedMedicine) {
-        for (Medicine medicine : medicineList) {
-            if (medicine.getMedicineId() == medicineId) {
-                medicine.setMedicineName(updatedMedicine.getMedicineName());
-                medicine.setPrice(updatedMedicine.getPrice());
-                medicine.setQuantity(updatedMedicine.getQuantity());
-                medicine.setDescription(updatedMedicine.getDescription());
-                return medicine;
-            }
+        if (medicineMap.containsKey(medicineId)) {
+            Medicine existingMedicine = medicineMap.get(medicineId);
+            // Update the existing medicine with new details
+            existingMedicine.setMedicineName(updatedMedicine.getMedicineName());
+            existingMedicine.setPrice(updatedMedicine.getPrice());
+            existingMedicine.setQuantity(updatedMedicine.getQuantity());
+            existingMedicine.setDescription(updatedMedicine.getDescription());
+            return existingMedicine;
+        } else {
+            return null; // You can handle this case differently, e.g., return an error message.
         }
-        return null;
     }
 }
